@@ -10,11 +10,11 @@ Automatically detects and backs up all volumes and databases in the docker compo
 
 ### beszel
 
-Remote agent for [beszel](), a basic resource monitoring tool with alerting functionality.
+Remote agent for [beszel](https://github.com/henrygd/beszel), a basic resource monitoring tool with alerting functionality.
 
 ### dozzle
 
-Remote agent for [dozzle](), a realtime log viewer for containers.
+Remote agent for [dozzle](https://github.com/amir20/dozzle), a realtime log viewer for containers.
 
 ## docker-compose.proxy.yaml
 
