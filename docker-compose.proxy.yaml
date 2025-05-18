@@ -1,0 +1,43 @@
+services:
+  #########
+  # Proxy #
+  #########
+  traefik:
+    image: traefik:latest
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - --log
+      - --log.level=${LOG_LEVEL:-INFO}
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --serversTransport.insecureSkipVerify=true # Allow self-signed certificates for target hosts
+      - --entrypoints.web.address=:80
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - tunnel
+      - default
+    labels:
+      - "stack-back.volumes=false" # disable volume backups for this container
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    user: "1000:1000"
+    command: tunnel run
+    restart: unless-stopped
+    networks:
+      - tunnel
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+      - TUNNEL_URL=http://traefik:80
+    labels:
+      - "stack-back.volumes=false" # disable volume backups for this container
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+networks:
+  tunnel:
