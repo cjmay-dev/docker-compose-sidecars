@@ -27,12 +27,11 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     user: "1000:1000"
-    command: tunnel run
+    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     restart: unless-stopped
     networks:
       - tunnel
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
       - TUNNEL_URL=http://traefik:80
     labels:
       - "stack-back.volumes=false" # disable volume backups for this container
