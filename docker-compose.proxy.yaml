@@ -12,15 +12,15 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
       - --serversTransport.insecureSkipVerify=true # Allow self-signed certificates for target hosts
-      - "--entrypoints.web.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22" # Cloudflare IPv4 ranges
-      - "--entrypoints.web.forwardedHeaders.trustedIPs=2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32" # Cloudflare IPv6 ranges
+      - "--entrypoints.web.forwardedHeaders.trustedIPs=172.29.5.2/32" # Let Cloudflare set forwarded headers
       - --entrypoints.web.address=:80
     restart: unless-stopped
     ports:
       - "80:80"
     networks:
-      - tunnel
-      - default
+      tunnel:
+        ipv4_address: 172.29.5.3
+      default:
     labels:
       - "stack-back.volumes=false" # disable volume backups for this container
     volumes:
@@ -32,7 +32,8 @@ services:
     command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     restart: unless-stopped
     networks:
-      - tunnel
+      tunnel:
+        ipv4_address: 172.29.5.2
     environment:
       - TUNNEL_URL=http://traefik:80
     labels:
@@ -42,3 +43,7 @@ services:
 
 networks:
   tunnel:
+    driver: bridge
+    ipam:
+      config:
+          ip_range: 172.29.5.0/24
