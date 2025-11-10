@@ -6,7 +6,7 @@ services:
     image: ghcr.io/lawndoc/stack-back:latest
     restart: unless-stopped
     environment:
-      AUTO_DECTECT_ALL: "true" # auto backup all volumes and databases unless explicitly excluded
+      AUTO_BACKUP_ALL: "true" # auto backup all volumes and databases unless explicitly excluded
       AWS_ACCESS_KEY_ID: ${B2_BUCKET_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${B2_BUCKET_KEY_SECRET}
       RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}
