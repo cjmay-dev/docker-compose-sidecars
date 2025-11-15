@@ -2,13 +2,34 @@ services:
   ###########
   # Backups #
   ###########
+  socket-proxy:
+      image: linuxserver/socket-proxy:latest
+      environment:
+        ALLOW_START: 1
+        ALLOW_STOP: 1
+        CONTAINERS: 1
+        EXEC: 1
+        POST: 1
+        VERSION: 1
+      read_only: true
+      tmpfs:
+        - /run
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+      restart: unless-stopped
+      networks:
+        - backup
   backup:
     image: ghcr.io/lawndoc/stack-back:latest
+    depends_on:
+      socket-proxy:
+        condition: service_started
     restart: unless-stopped
     environment:
       AUTO_BACKUP_ALL: "true" # auto backup all volumes and databases unless explicitly excluded
       AWS_ACCESS_KEY_ID: ${B2_BUCKET_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${B2_BUCKET_KEY_SECRET}
+      DOCKER_HOST: tcp://socket-proxy:2375
       RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}
       RESTIC_PASSWORD: ${RESTIC_BACKUP_PASSWORD}
       RESTIC_KEEP_DAILY: 7
@@ -22,8 +43,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - backupcache:/cache
     networks:
-      - database-backup
-      - default  # in case a database is not in the database-backup network
+      - backup
     healthcheck:
       test: ["CMD", "rcb", "status"]
       interval: 30m
@@ -47,16 +67,10 @@ services:
     environment:
       PORT: 45876
       KEY: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE9n246QELTB365/0kEXp8e0g1/jVsGep6kc0tQGEvJE"
-  dozzle-agent:
-    image: amir20/dozzle:latest
-    container_name: dozzle-agent
-    restart: unless-stopped
-    command: agent
-    labels:
-      - "stack-back.volumes=false" # disable volume backups for this container
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - 7007:7007
+    healthcheck:
+      test: ['CMD', '/agent', 'health']
+      interval: 120s
 volumes:
   backupcache:
+networks:
+  backup:
